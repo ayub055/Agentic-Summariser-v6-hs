@@ -13,8 +13,11 @@ from typing import Optional
 from jinja2 import Environment, FileSystemLoader
 from fpdf import FPDF
 
+from dataclasses import asdict
+
 from schemas.customer_report import CustomerReport
-from utils.helpers import mask_customer_id
+from features.tradeline_features import TradelineFeatures
+from utils.helpers import mask_customer_id, format_inr_units, strip_segment_prefix
 
 
 def _sanitize_text(text: str) -> str:
@@ -209,13 +212,14 @@ def _build_pdf(report: CustomerReport) -> FPDF:
     return pdf
 
 
-def render_report_pdf(report: CustomerReport, output_path: str) -> str:
+def render_report_pdf(report: CustomerReport, output_path: str, tl_features: Optional[TradelineFeatures] = None) -> str:
     """
     Render a CustomerReport to PDF.
 
     Args:
         report: Fully populated CustomerReport
         output_path: Desired output file path (.pdf)
+        tl_features: Optional pre-computed tradeline features for customer profile block
 
     Returns:
         Path where PDF was saved
@@ -230,19 +234,20 @@ def render_report_pdf(report: CustomerReport, output_path: str) -> str:
 
     # Also save HTML version for browser viewing
     html_path = str(output_file).replace('.pdf', '.html')
-    html_content = render_report_html(report)
+    html_content = render_report_html(report, tl_features=tl_features)
     with open(html_path, 'w', encoding='utf-8') as f:
         f.write(html_content)
 
     return str(output_file)
 
 
-def render_report_html(report: CustomerReport) -> str:
+def render_report_html(report: CustomerReport, tl_features: Optional[TradelineFeatures] = None) -> str:
     """
     Render a CustomerReport to HTML string.
 
     Args:
         report: CustomerReport to render
+        tl_features: Optional pre-computed tradeline features for customer profile block
 
     Returns:
         HTML string
@@ -254,11 +259,14 @@ def render_report_html(report: CustomerReport) -> str:
         loader=FileSystemLoader(str(template_dir)),
         autoescape=True
     )
-    # Add custom filter for masking customer IDs
     env.filters['mask_id'] = mask_customer_id
+    env.filters['inr_units'] = format_inr_units
+    env.filters['segment'] = strip_segment_prefix
+
+    tl_features_data = asdict(tl_features) if tl_features is not None else None
 
     template = env.get_template("customer_report.html")
-    return template.render(report=report)
+    return template.render(report=report, tl_features=tl_features_data)
 
 
 def is_pdf_available() -> bool:

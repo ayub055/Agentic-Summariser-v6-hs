@@ -42,12 +42,25 @@ _COLUMN_MAP = {
     "interpurchase_time_l24m_hl_lap": "interpurchase_time_24m_hl_lap",
     "interpurchase_time_l24m_twl": "interpurchase_time_24m_twl",
     "interpurchase_time_l12m_cl": "interpurchase_time_12m_cl",
+    # Customer profile
+    "ktk_rel": "ktk_rel",
+    "customer_segment_1_ordered": "customer_segment",
+    "bank_grp": "bank_grp",
+    "bu_grp": "bu_grp",
+    "affluence_amt_6": "affluence_amt",
+    "income_source_new": "income_source",
+    "node": "node",
 }
 
 # Fields that should be parsed as int (rest are float)
 _INT_FIELDS = {
     "new_trades_6m_pl", "total_trades", "max_dpd_6m_cc",
     "max_dpd_6m_pl", "max_dpd_9m_cc", "unsecured_enquiries_12m",
+}
+
+# Fields that should be kept as plain strings
+_STR_FIELDS = {
+    "ktk_rel", "customer_segment", "bank_grp", "bu_grp", "income_source", "node",
 }
 
 
@@ -59,6 +72,13 @@ def _load_tl_features(force_reload: bool = False) -> List[dict]:
             reader = csv.DictReader(f, delimiter=TL_FEATURES_DELIMITER)
             _tl_features_df = list(reader)
     return _tl_features_df
+
+
+def _safe_optional_str(value: str) -> Optional[str]:
+    """Return stripped string, or None for NULL/empty values."""
+    if not value or value.strip().upper() in ("NULL", ""):
+        return None
+    return value.strip()
 
 
 def _safe_optional_float(value: str) -> Optional[float]:
@@ -114,6 +134,8 @@ def extract_tradeline_features(customer_id: int) -> Optional[TradelineFeatures]:
         raw_value = matching_row.get(csv_col, "")
         if field_name in _INT_FIELDS:
             kwargs[field_name] = _safe_optional_int(raw_value)
+        elif field_name in _STR_FIELDS:
+            kwargs[field_name] = _safe_optional_str(raw_value)
         else:
             kwargs[field_name] = _safe_optional_float(raw_value)
 

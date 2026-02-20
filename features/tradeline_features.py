@@ -45,6 +45,15 @@ class TradelineFeatures:
     unsecured_enquiries_12m: Optional[int] = None            # uns_enq_l12m
     trade_to_enquiry_ratio_uns_24m: Optional[float] = None   # tr_to_enq_ratio_uns_l24m
 
+    # --- Customer Profile ---
+    ktk_rel: Optional[str] = None                            # ktk_rel
+    customer_segment: Optional[str] = None                   # customer_segment_1_ordered
+    bank_grp: Optional[str] = None                           # bank_grp
+    bu_grp: Optional[str] = None                             # bu_grp
+    affluence_amt: Optional[float] = None                    # affluence_amt_6
+    income_source: Optional[str] = None                      # income_source_new
+    node: Optional[str] = None                               # node
+
     # --- Loan Acquisition Velocity ---
     interpurchase_time_12m_plbl: Optional[float] = None      # interpurchase_time_l12m_plbl
     interpurchase_time_6m_plbl: Optional[float] = None       # interpurchase_time_l6m_plbl

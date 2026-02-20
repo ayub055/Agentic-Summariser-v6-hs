@@ -36,6 +36,7 @@ from pipeline.customer_report_builder import (
 from pipeline.report_planner import ReportPlanner, ReportPlan, PlannedSection
 from pipeline.report_summary_chain import generate_customer_review, generate_customer_persona
 from pipeline.pdf_renderer import render_report_pdf
+from pipeline.tradeline_feature_extractor import extract_tradeline_features
 from data.loader import get_transactions_df
 
 
@@ -115,12 +116,19 @@ def generate_customer_report_pdf(
         except Exception as e:
             logger.warning(f"Failed to generate customer review: {e}")
 
+    # Load tradeline features for customer profile block (fail-soft)
+    tl_features = None
+    try:
+        tl_features = extract_tradeline_features(customer_id)
+    except Exception as e:
+        logger.warning(f"Tradeline features unavailable for customer profile [{customer_id}]: {e}")
+
     # Render PDF
     if output_path is None:
         output_path = f"reports/customer_{customer_id}_report.pdf"
 
     try:
-        pdf_path = render_report_pdf(report, output_path)
+        pdf_path = render_report_pdf(report, output_path, tl_features=tl_features)
     except Exception as e:
         logger.error(f"Failed to render PDF: {e}")
         raise ReportGenerationError(f"PDF rendering failed: {e}")

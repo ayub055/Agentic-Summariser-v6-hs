@@ -228,7 +228,7 @@
             max-width: 100% !important;
             max-height: none !important;
             width: 100% !important;
-            height: 300px !important;
+            height: 420px !important;
         }
 
         @media print {
@@ -369,14 +369,39 @@
 
     <script>
     (function() {
-        const PALETTE = [
-            "#3498db","#e74c3c","#2ecc71","#f39c12",
-            "#9b59b6","#1abc9c","#e67e22","#34495e",
-            "#e91e63","#00bcd4","#ff5722","#607d8b","#795548"
+        // Fixed per-product color map — consistent across ALL charts.
+        // Keys: short enum names (timeseries) AND display names (donuts).
+        const PRODUCT_COLORS = {
+            // Short names
+            "PL":   "#4E79A7", "CC":   "#F28E2B", "HL":   "#59A14F",
+            "AL":   "#E15759", "BL":   "#B07AA1", "LAP":  "#9C755F",
+            "LAS":  "#86BCB6", "LAD":  "#D37295", "GL":   "#EDC948",
+            "TWL":  "#76B7B2", "CD":   "#FF9DA7", "CMVL": "#A0CBE8",
+            "OTHER":"#BAB0AC",
+            // Display names (donuts receive these from Python)
+            "Personal Loan":          "#4E79A7",
+            "Credit Card":            "#F28E2B",
+            "Home Loan":              "#59A14F",
+            "Auto Loan":              "#E15759",
+            "Business Loan":          "#B07AA1",
+            "LAP":                    "#9C755F",
+            "LAS":                    "#86BCB6",
+            "LAD":                    "#D37295",
+            "Gold Loan":              "#EDC948",
+            "Two Wheeler Loan":       "#76B7B2",
+            "Consumer Durable":       "#FF9DA7",
+            "Commercial Vehicle Loan":"#A0CBE8",
+            "Other":                  "#BAB0AC",
+        };
+        const FALLBACK_PALETTE = [
+            "#4E79A7","#F28E2B","#59A14F","#E15759","#B07AA1",
+            "#9C755F","#86BCB6","#D37295","#EDC948","#76B7B2",
+            "#FF9DA7","#A0CBE8","#BAB0AC"
         ];
-        const SECURED_COLORS     = ["#27ae60","#e67e22"];
-        const LIVE_CLOSED_COLORS = ["#3498db","#95a5a6"];
-        const ONUS_COLORS        = ["#8e44ad","#1abc9c"];
+        const productColor = (name, idx) => PRODUCT_COLORS[name] || FALLBACK_PALETTE[idx % FALLBACK_PALETTE.length];
+
+        const SECURED_COLORS = ["#27ae60","#e67e22"];
+        const ONUS_COLORS    = ["#8e44ad","#1abc9c"];
 
         const COMMON_OPTS = {
             responsive: false,
@@ -386,10 +411,11 @@
             },
         };
 
-        function mkDonut(canvasId, labels, values, colors) {
+        // colorFn(label, index) → hex color string
+        function mkDonut(canvasId, labels, values, colorFn) {
             const ctx = document.getElementById(canvasId);
             if (!ctx) return;
-            const filtered = labels.map((l,i) => [l, values[i], colors[i % colors.length]])
+            const filtered = labels.map((l, i) => [l, values[i], colorFn(l, i)])
                                    .filter(x => x[1] > 0);
             if (!filtered.length) { ctx.parentElement.innerHTML += "<p style='color:#aaa;font-size:12px;'>No data</p>"; return; }
             new Chart(ctx, {
@@ -404,11 +430,11 @@
         }
 
         const CD = {{ chart_data | safe }};
-        mkDonut("cmbChartProductMix", CD.product_mix.labels,   CD.product_mix.values,   PALETTE);
-        mkDonut("cmbChartSecured",    CD.secured_split.labels, CD.secured_split.values, SECURED_COLORS);
-        mkDonut("cmbChartOnUs",       CD.onus_offus.labels,    CD.onus_offus.values,    ONUS_COLORS);
+        mkDonut("cmbChartProductMix", CD.product_mix.labels,   CD.product_mix.values,   productColor);
+        mkDonut("cmbChartSecured",    CD.secured_split.labels, CD.secured_split.values, (_, i) => SECURED_COLORS[i % SECURED_COLORS.length]);
+        mkDonut("cmbChartOnUs",       CD.onus_offus.labels,    CD.onus_offus.values,    (_, i) => ONUS_COLORS[i % ONUS_COLORS.length]);
 
-        // Unsecured outstanding donut — INR-formatted tooltip
+        // Unsecured outstanding donut — product colors + INR-formatted tooltip
         (function() {
             const uo = CD.unsec_outstanding;
             const ctx = document.getElementById("cmbChartUnsecOut");
@@ -419,7 +445,7 @@
                 type: "doughnut",
                 data: {
                     labels: uo.labels,
-                    datasets: [{ data: uo.values, backgroundColor: uo.labels.map((_, i) => PALETTE[i % PALETTE.length]),
+                    datasets: [{ data: uo.values, backgroundColor: uo.labels.map(productColor),
                                  borderWidth: 2, borderColor: "#fff", hoverOffset: 6 }]
                 },
                 options: {
@@ -432,7 +458,7 @@
             });
         })();
 
-        // Stacked area chart — portfolio exposure over time
+        // Stacked area chart — portfolio exposure over time, product colors
         (function() {
             const ts = CD.timeseries;
             const ctx = document.getElementById("cmbChartTimeseries");
@@ -442,13 +468,14 @@
             const entries = Object.entries(ts.series)
                 .map(([name, vals]) => [name, vals, vals.reduce((a, b) => a + b, 0)])
                 .sort((a, b) => b[2] - a[2]);
-            const datasets = entries.map(([name, vals], i) => ({
-                label: name,
-                data: vals,
-                borderColor: PALETTE[i % PALETTE.length],
-                backgroundColor: PALETTE[i % PALETTE.length] + "55",
-                tension: 0.3, fill: true, pointRadius: 0, pointHoverRadius: 4, borderWidth: 1.5,
-            }));
+            const datasets = entries.map(([name, vals], i) => {
+                const col = productColor(name, i);
+                return {
+                    label: name, data: vals,
+                    borderColor: col, backgroundColor: col + "BB",
+                    tension: 0.3, fill: true, pointRadius: 0, pointHoverRadius: 4, borderWidth: 2,
+                };
+            });
             new Chart(ctx, {
                 type: "line",
                 data: { labels: ts.months, datasets },
@@ -466,7 +493,7 @@
                     },
                     scales: {
                         x: { ticks: { font: { size: 9 }, maxRotation: 45, autoSkip: true, maxTicksLimit: 12 } },
-                        y: { stacked: true, ticks: { font: { size: 10 }, callback: fmt }, beginAtZero: true },
+                        y: { stacked: true, ticks: { font: { size: 10 }, callback: fmt, maxTicksLimit: 9 }, beginAtZero: true },
                     },
                 },
             });
@@ -711,6 +738,52 @@
     {# ================================================================== #}
 
     {% if customer_report %}
+
+    <!-- Relationship Profile (from tl_features) -->
+    {% if tl_features %}
+    <div class="section">
+        <h3>Relationship Profile</h3>
+        <div class="info-grid">
+            {% if tl_features.ktk_rel %}
+            <div class="info-item">
+                <label>Relationship</label>
+                <div class="value">{{ tl_features.ktk_rel }}</div>
+            </div>
+            {% endif %}
+            {% if tl_features.customer_segment %}
+            <div class="info-item">
+                <label>Segment</label>
+                <div class="value">{{ tl_features.customer_segment|segment }}</div>
+            </div>
+            {% endif %}
+            {% if tl_features.bank_grp %}
+            <div class="info-item">
+                <label>Banking Group</label>
+                <div class="value">{{ tl_features.bank_grp }}</div>
+            </div>
+            {% endif %}
+            {% if tl_features.bu_grp %}
+            <div class="info-item">
+                <label>Bureau Group</label>
+                <div class="value">{{ tl_features.bu_grp }}</div>
+            </div>
+            {% endif %}
+            {% if tl_features.affluence_amt is not none or tl_features.income_source %}
+            <div class="info-item">
+                <label>Affluence Amount</label>
+                <div class="value">{% if tl_features.affluence_amt is not none %}INR {{ tl_features.affluence_amt|inr_units }}{% else %}N/A{% endif %}</div>
+                {% if tl_features.income_source %}<div style="font-size: 12px; color: #666; margin-top: 3px;">{{ tl_features.income_source }}</div>{% endif %}
+            </div>
+            {% endif %}
+            {% if tl_features.node %}
+            <div class="info-item">
+                <label>Customer Persona</label>
+                <div class="value">{{ tl_features.node|segment }}</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
 
     {% if customer_report.customer_persona %}
     <div class="section">

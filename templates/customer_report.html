@@ -160,6 +160,52 @@
         </div>
     </div>
 
+    <!-- Relationship Profile (from tl_features) -->
+    {% if tl_features %}
+    <div class="section">
+        <h3>Relationship Profile</h3>
+        <div class="info-grid">
+            {% if tl_features.ktk_rel %}
+            <div class="info-item">
+                <label>Relationship</label>
+                <div class="value">{{ tl_features.ktk_rel }}</div>
+            </div>
+            {% endif %}
+            {% if tl_features.customer_segment %}
+            <div class="info-item">
+                <label>Segment</label>
+                <div class="value">{{ tl_features.customer_segment|segment }}</div>
+            </div>
+            {% endif %}
+            {% if tl_features.bank_grp %}
+            <div class="info-item">
+                <label>Banking Group</label>
+                <div class="value">{{ tl_features.bank_grp }}</div>
+            </div>
+            {% endif %}
+            {% if tl_features.bu_grp %}
+            <div class="info-item">
+                <label>Bureau Group</label>
+                <div class="value">{{ tl_features.bu_grp }}</div>
+            </div>
+            {% endif %}
+            {% if tl_features.affluence_amt is not none or tl_features.income_source %}
+            <div class="info-item">
+                <label>Affluence Amount</label>
+                <div class="value">{% if tl_features.affluence_amt is not none %}INR {{ tl_features.affluence_amt|inr_units }}{% else %}N/A{% endif %}</div>
+                {% if tl_features.income_source %}<div style="font-size: 12px; color: #666; margin-top: 3px;">{{ tl_features.income_source }}</div>{% endif %}
+            </div>
+            {% endif %}
+            {% if tl_features.node %}
+            <div class="info-item">
+                <label>Customer Persona</label>
+                <div class="value">{{ tl_features.node|segment }}</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
     {% if report.customer_review %}
     <div class="section">
         <h3>Executive Summary</h3>

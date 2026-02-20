@@ -63,6 +63,20 @@ def format_inr_units(amount) -> str:
     return f"-{result}" if float(amount) < 0 else result
 
 
+def strip_segment_prefix(value: str) -> str:
+    """Strip leading sort-code prefixes from segment/node labels.
+
+    Handles both letter-prefixed ('I.Super' → 'Super') and
+    number-prefixed ('20. Others' → 'Others') values.
+    Also converts underscores to spaces ('Super_Plus' → 'Super Plus').
+    """
+    import re
+    if not value:
+        return value
+    cleaned = re.sub(r'^[A-Za-z0-9]+\.\s*', '', value).replace('_', ' ')
+    return cleaned if cleaned else value
+
+
 def print_header(title: str, char: str = "=", width: int = 60):
     """Print a formatted header."""
     print(char * width)

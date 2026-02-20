@@ -22,7 +22,7 @@ from pipeline.bureau_pdf_renderer import (
     _compute_html_chart_data,
 )
 from pipeline.key_findings import findings_to_dicts
-from utils.helpers import mask_customer_id, format_inr, format_inr_units
+from utils.helpers import mask_customer_id, format_inr, format_inr_units, strip_segment_prefix
 
 
 class CombinedReportPDF(ReportPDF):
@@ -424,6 +424,7 @@ def render_combined_report_html(
     env.filters["mask_id"] = mask_customer_id
     env.filters["inr"] = format_inr
     env.filters["inr_units"] = format_inr_units
+    env.filters["segment"] = strip_segment_prefix
 
     # Prepare bureau data for template
     vectors_data = []
