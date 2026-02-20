@@ -32,6 +32,12 @@ BUREAU_DPD_DELIMITER = "\t"
 TL_FEATURES_FILE = os.path.join(_PROJECT_ROOT, "tl_features.csv")
 TL_FEATURES_DELIMITER = "\t"
 
+# Internal salary algorithm outputs
+RG_SAL_FILE = os.path.join(_PROJECT_ROOT, "rg_sal_strings.csv")
+RG_SAL_DELIMITER = "\t"
+RG_INCOME_FILE = os.path.join(_PROJECT_ROOT, "rg_income_strings.csv")
+RG_INCOME_DELIMITER = "\t"
+
 LOG_DIR = "logs"
 
 # =============================================================================

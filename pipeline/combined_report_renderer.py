@@ -363,6 +363,7 @@ def render_combined_report(
     bureau_report: Optional[BureauReport],
     output_path: Optional[str] = None,
     combined_summary: Optional[str] = None,
+    rg_salary_data: Optional[dict] = None,
 ) -> str:
     """Render combined PDF + HTML from both reports.
 
@@ -372,6 +373,7 @@ def render_combined_report(
         output_path: Desired output file path (.pdf).
                       Defaults to reports/combined_{customer_id}_report.pdf.
         combined_summary: LLM-generated synthesised executive summary.
+        rg_salary_data: Optional internal salary algorithm data dict.
 
     Returns:
         Path where PDF was saved.
@@ -396,7 +398,8 @@ def render_combined_report(
     # Also save HTML version
     html_path = str(output_file).replace(".pdf", ".html")
     html_content = render_combined_report_html(
-        customer_report, bureau_report, combined_summary=combined_summary
+        customer_report, bureau_report, combined_summary=combined_summary,
+        rg_salary_data=rg_salary_data,
     )
     with open(html_path, "w", encoding="utf-8") as f:
         f.write(html_content)
@@ -408,6 +411,7 @@ def render_combined_report_html(
     customer_report: Optional[CustomerReport],
     bureau_report: Optional[BureauReport],
     combined_summary: Optional[str] = None,
+    rg_salary_data: Optional[dict] = None,
 ) -> str:
     """Render combined HTML from both reports using Jinja2 template.
 
@@ -453,4 +457,5 @@ def render_combined_report_html(
         key_findings=key_findings_data,
         combined_summary=combined_summary,
         chart_data=chart_data,
+        rg_salary_data=rg_salary_data,
     )

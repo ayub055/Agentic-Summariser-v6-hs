@@ -37,7 +37,7 @@ from pipeline.report_planner import ReportPlanner, ReportPlan, PlannedSection
 from pipeline.report_summary_chain import generate_customer_review, generate_customer_persona
 from pipeline.pdf_renderer import render_report_pdf
 from pipeline.tradeline_feature_extractor import extract_tradeline_features
-from data.loader import get_transactions_df
+from data.loader import get_transactions_df, load_rg_salary_data
 
 
 # Cache for report data - keyed by (customer_id, period)
@@ -123,12 +123,19 @@ def generate_customer_report_pdf(
     except Exception as e:
         logger.warning(f"Tradeline features unavailable for customer profile [{customer_id}]: {e}")
 
+    # Load internal salary algorithm data (fail-soft)
+    rg_salary_data = None
+    try:
+        rg_salary_data = load_rg_salary_data(customer_id) or None
+    except Exception as e:
+        logger.warning(f"RG salary data unavailable for [{customer_id}]: {e}")
+
     # Render PDF
     if output_path is None:
         output_path = f"reports/customer_{customer_id}_report.pdf"
 
     try:
-        pdf_path = render_report_pdf(report, output_path, tl_features=tl_features)
+        pdf_path = render_report_pdf(report, output_path, tl_features=tl_features, rg_salary_data=rg_salary_data)
     except Exception as e:
         logger.error(f"Failed to render PDF: {e}")
         raise ReportGenerationError(f"PDF rendering failed: {e}")

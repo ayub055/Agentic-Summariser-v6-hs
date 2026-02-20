@@ -64,10 +64,19 @@ def generate_combined_report_pdf(
     except Exception as e:
         logger.warning(f"Combined executive summary generation failed: {e}")
 
+    # 2.7 Load internal salary data (fail-soft)
+    rg_salary_data = None
+    try:
+        from data.loader import load_rg_salary_data
+        rg_salary_data = load_rg_salary_data(customer_id) or None
+    except Exception as e:
+        logger.warning(f"RG salary data unavailable for combined report [{customer_id}]: {e}")
+
     # 3. Combined rendering
     from pipeline.combined_report_renderer import render_combined_report
     pdf_path = render_combined_report(
         customer_report, bureau_report, combined_summary=combined_summary,
+        rg_salary_data=rg_salary_data,
     )
 
     return customer_report, bureau_report, pdf_path

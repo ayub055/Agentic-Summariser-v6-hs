@@ -212,7 +212,12 @@ def _build_pdf(report: CustomerReport) -> FPDF:
     return pdf
 
 
-def render_report_pdf(report: CustomerReport, output_path: str, tl_features: Optional[TradelineFeatures] = None) -> str:
+def render_report_pdf(
+    report: CustomerReport,
+    output_path: str,
+    tl_features: Optional[TradelineFeatures] = None,
+    rg_salary_data: Optional[dict] = None,
+) -> str:
     """
     Render a CustomerReport to PDF.
 
@@ -220,6 +225,7 @@ def render_report_pdf(report: CustomerReport, output_path: str, tl_features: Opt
         report: Fully populated CustomerReport
         output_path: Desired output file path (.pdf)
         tl_features: Optional pre-computed tradeline features for customer profile block
+        rg_salary_data: Optional internal salary algorithm data dict
 
     Returns:
         Path where PDF was saved
@@ -234,20 +240,25 @@ def render_report_pdf(report: CustomerReport, output_path: str, tl_features: Opt
 
     # Also save HTML version for browser viewing
     html_path = str(output_file).replace('.pdf', '.html')
-    html_content = render_report_html(report, tl_features=tl_features)
+    html_content = render_report_html(report, tl_features=tl_features, rg_salary_data=rg_salary_data)
     with open(html_path, 'w', encoding='utf-8') as f:
         f.write(html_content)
 
     return str(output_file)
 
 
-def render_report_html(report: CustomerReport, tl_features: Optional[TradelineFeatures] = None) -> str:
+def render_report_html(
+    report: CustomerReport,
+    tl_features: Optional[TradelineFeatures] = None,
+    rg_salary_data: Optional[dict] = None,
+) -> str:
     """
     Render a CustomerReport to HTML string.
 
     Args:
         report: CustomerReport to render
         tl_features: Optional pre-computed tradeline features for customer profile block
+        rg_salary_data: Optional internal salary algorithm data dict
 
     Returns:
         HTML string
@@ -266,7 +277,7 @@ def render_report_html(report: CustomerReport, tl_features: Optional[TradelineFe
     tl_features_data = asdict(tl_features) if tl_features is not None else None
 
     template = env.get_template("customer_report.html")
-    return template.render(report=report, tl_features=tl_features_data)
+    return template.render(report=report, tl_features=tl_features_data, rg_salary_data=rg_salary_data)
 
 
 def is_pdf_available() -> bool:

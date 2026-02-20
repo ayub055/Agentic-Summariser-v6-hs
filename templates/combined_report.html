@@ -824,6 +824,67 @@
     </div>
     {% endif %}
 
+    {% if rg_salary_data %}
+    <div class="section">
+        <h3>Internal Salary Analysis</h3>
+
+        {% if rg_salary_data.rg_sal %}
+        <h4 style="color: #2c3e50; font-size: 14px; margin-bottom: 8px;">RG SAL</h4>
+        <div class="summary-box">
+            <p>{{ rg_salary_data.rg_sal.observation }}</p>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Narration</th>
+                    <th class="amount">Amount (INR)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for txn in rg_salary_data.rg_sal.transactions %}
+                <tr>
+                    <td>{{ txn.date }}</td>
+                    <td>{{ txn.narration[:60] }}{% if txn.narration|length > 60 %}...{% endif %}</td>
+                    <td class="amount positive">{{ "{:,.0f}".format(txn.amount) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+
+        {% if rg_salary_data.rg_income %}
+        <h4 style="color: #2c3e50; font-size: 14px; margin-top: 18px; margin-bottom: 8px;">RG Income</h4>
+        <div class="summary-box">
+            <p>{{ rg_salary_data.rg_income.observation }}</p>
+        </div>
+        {% for src in rg_salary_data.rg_income.sources %}
+        <p style="margin-top: 12px; margin-bottom: 6px; font-weight: 600; color: #2c3e50; font-size: 13px;">
+            {{ src.merchant }} &mdash; {{ src.count }} transaction{{ 's' if src.count != 1 else '' }}, Total: INR {{ "{:,.0f}".format(src.total) }}
+        </p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Narration</th>
+                    <th class="amount">Amount (INR)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for txn in src.transactions %}
+                <tr>
+                    <td>{{ txn.date }}</td>
+                    <td>{{ txn.narration[:60] }}{% if txn.narration|length > 60 %}...{% endif %}</td>
+                    <td class="amount positive">{{ "{:,.0f}".format(txn.amount) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endfor %}
+        {% endif %}
+    </div>
+    {% endif %}
+
     {% if customer_report.category_overview %}
     <div class="section">
         <h3>Spending by Category</h3>
